@@ -6,34 +6,33 @@ class Preprocessing:
 	@staticmethod
 	def read_dataset(file):
 		
-		letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m',
-					'n','o','p','q','r','s','t','u','v','w','x','y','z',' ']
+		
 		
 		# Open raw file
-		with open(file, 'r') as f:
-			raw_text = f.readlines()
-			
-		# Transform each line into lower
-		raw_text = [line.lower() for line in raw_text]
-		
-		# Create a string which contains the entire text
-		text_string = ''
-		for line in raw_text:
-			text_string += line.strip()
-		
-		# Create an array by char
-		text = list()
-		for char in text_string:
-			text.append(char)
-	
-		# Remove all symbosl and just keep letters
-		text = [char for char in text if char in letters]
-	
-		return text
+		with open(file, 'r',encoding='gbk') as f:
+			 data = f.readlines()
+		pattern = re.compile(r'\(.*\)')
+		data = [pattern.sub('', lines) for lines in data]
+		data = [line.replace('……', '。') for line in data if len(line) > 1]
+		def is_uchar(uchar):
+    		if uchar >= u'\u4e00' and uchar<=u'\u9fa5':
+            	return True
+    		if uchar >= u'\u0030' and uchar<=u'\u0039':
+            	return True       
+    		if (uchar >= u'\u0041' and uchar<=u'\u005a') or (uchar >= u'\u0061' and uchar<=u'\u007a'):
+            	return True
+    		if uchar in ('，','。','：','？','“','”','！','；','、','《','》','——'):
+            	return True
+    		return False
+		data = ''.join(data)
+		data = [char for char in data if is_uchar(char)]
+		data = ''.join(data)
+  
+		return data
 		
 	@staticmethod
-	def create_dictionary(text):
-		
+	def create_dictionary(data):
+		text = set(data)
 		char_to_idx = dict()
 		idx_to_char = dict()
 		
