@@ -16,7 +16,7 @@ from utils import parameter_parser
 class Execution:
 
 	def __init__(self, args):
-		self.file = 'data/book.txt'
+		self.file = 'data/gmzu.txt'
 		self.window = args.window
 		self.batch_size = args.batch_size
 		self.learning_rate = args.learning_rate
@@ -35,8 +35,7 @@ class Execution:
 		
 		# The 'file' is loaded and split by char
 		text = preprocessing.read_dataset(self.file)
-		
-		# Given 'text', it is created two dictionaries
+
 		# a dictiornary about: from char to index
 		# a dictorionary about: from index to char
 		self.char_to_idx, self.idx_to_char = preprocessing.create_dictionary(text)
@@ -52,9 +51,10 @@ class Execution:
 	def train(self, args):
 	
 		# Model initialization
-		model = TextGenerator(args, self.vocab_size)
+		model = TextGenerator(args, self.vocab_size).to('cuda')
 		# Optimizer initialization
-		optimizer = optim.RMSprop(model.parameters(), lr=self.learning_rate)
+		optimizer = optim.Adam(model.parameters(), lr=0.001)
+		scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 		# Defining number of batches
 		num_batches = int(len(self.sequences) / self.batch_size)
 		# Set model in training mode
@@ -74,11 +74,10 @@ class Execution:
 					y_batch = self.targets[i * self.batch_size :]
 			
 				# Convert numpy array into torch tensors
-				x = torch.from_numpy(x_batch).type(torch.LongTensor)
-				y = torch.from_numpy(y_batch).type(torch.LongTensor)
-				
+				x = torch.from_numpy(x_batch).type(torch.LongTensor).to('cuda')
+				y = torch.from_numpy(y_batch).type(torch.LongTensor).to('cuda')
 				# Feed the model
-				y_pred = model(x)
+				y_pred,hidden = model(x)
 				# Loss calculation
 				loss = F.cross_entropy(y_pred, y.squeeze())
 				# Clean gradients
@@ -89,18 +88,17 @@ class Execution:
 				optimizer.step()
 			
 			print("Epoch: %d,  loss: %.5f " % (epoch, loss.item()))
-			
-			
-		torch.save(model.state_dict(), 'weights/textGenerator_model.pt')
+			scheduler.step()
+			torch.save(model.state_dict(), f'weights/textGenerator_model-{epoch}.pt')
 	
 	@staticmethod
 	def generator(model, sequences, idx_to_char, n_chars):
 		
 		# Set the model in evalulation mode
 		model.eval()
-		
+		hidden = torch.zeros((2, 3 * 1, 1, args.hidden_dim), dtype=torch.float).to('cuda')
 		# Define the softmax function
-		softmax = nn.Softmax(dim=1)
+		# softmax = nn.Softmax(dim=1)
 		
 		# Randomly is selected the index from the set of sequences
 		start = np.random.randint(0, len(sequences)-1)
@@ -121,20 +119,20 @@ class Execution:
 		
 			# The numpy patterns is transformed into a tesor-type and reshaped
 			pattern = torch.from_numpy(pattern).type(torch.LongTensor)
-			pattern = pattern.view(1,-1)
+			pattern = pattern.view(1,-1).to('cuda')
 			
 			# Make a prediction given the pattern
-			prediction = model(pattern)
+			prediction ,hidden= model(pattern,hidden=hidden)
 			# It is applied the softmax function to the predicted tensor
-			prediction = softmax(prediction)
+			# prediction = softmax(prediction)
 			
 			# The prediction tensor is transformed into a numpy array
-			prediction = prediction.squeeze().detach().numpy()
+			prediction = prediction.squeeze().detach().cpu().numpy()
 			# It is taken the idx with the highest probability
 			arg_max = np.argmax(prediction)
 			
 			# The current pattern tensor is transformed into numpy array
-			pattern = pattern.squeeze().detach().numpy()
+			pattern = pattern.squeeze().detach().cpu().numpy()
 			# The window is sliced 1 character to the right
 			pattern = pattern[1:]
 			# The new pattern is composed by the "old" pattern + the predicted character
@@ -163,12 +161,12 @@ if __name__ == '__main__':
 			vocab_size = execution.vocab_size
 			
 			# Initialize the model
-			model = TextGenerator(args, vocab_size)
+			model = TextGenerator(args, vocab_size).to('cuda')
 			# Load weights
-			model.load_state_dict(torch.load('weights/textGenerator_model.pt'))
+			model.load_state_dict(torch.load(args.model, map_location='cuda'))
 			
 			# Text generator
-			execution.generator(model, sequences, idx_to_char, 1000)
+			execution.generator(model, sequences, idx_to_char, 10000)
 	
 	# If you will train the model 		
 	else:
@@ -184,9 +182,9 @@ if __name__ == '__main__':
 		vocab_size = execution.vocab_size
 		
 		# Initialize the model
-		model = TextGenerator(args, vocab_size)
+		model = TextGenerator(args, vocab_size).to('cuda')
 		# Load weights
-		model.load_state_dict(torch.load('weights/textGenerator_model.pt'))
+		model.load_state_dict(torch.load('weights/textGenerator_model-0.pt', map_location='cuda'))
 		
 		# Text generator
-		execution.generator(model, sequences, idx_to_char, 1000)
+		execution.generator(model, sequences, idx_to_char, 10000)
