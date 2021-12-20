@@ -1,7 +1,7 @@
 
 import numpy as np
 import re
-
+import jieba
 
 def is_uchar(uchar):
 	if uchar >= u'\u4e00' and uchar <= u'\u9fa5':
@@ -26,6 +26,9 @@ class Preprocessing:
 		data = ''.join(data)
 		data = [char for char in data if is_uchar(char)]
 		data = ''.join(data)
+		data = re.sub("[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）]+", "", data)
+		data = jieba.cut(data)
+		data = [i for i in data]
 		return data
 		
 	@staticmethod
@@ -60,8 +63,8 @@ class Preprocessing:
 				
 				# Get char target
 				# Then, transfrom it into its idx representation
-				target = text[i+window]
-				target = char_to_idx[target]
+				target = text[i+window:i+2*window]
+				target = [char_to_idx[char] for char in target]
 				
 				# Save sequences and targets
 				x.append(sequence)
@@ -71,6 +74,5 @@ class Preprocessing:
 		
 		x = np.array(x)
 		y = np.array(y)
-		
 		return x, y
 		

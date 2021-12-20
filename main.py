@@ -36,8 +36,7 @@ class Execution:
 		# The 'file' is loaded and split by char
 		text = preprocessing.read_dataset(self.file)
 
-		# a dictiornary about: from char to index
-		# a dictorionary about: from index to char
+
 		self.char_to_idx, self.idx_to_char = preprocessing.create_dictionary(text)
 		
 		# Given the 'window', it is created the set of training sentences as well as
@@ -78,7 +77,8 @@ class Execution:
 				y = torch.from_numpy(y_batch).type(torch.LongTensor).to('cuda')
 				# Feed the model
 				y_pred,hidden = model(x)
-				# Loss calculation
+				print(y_pred.shape)
+				print(y.squeeze().shape)
 				loss = F.cross_entropy(y_pred, y.squeeze())
 				# Clean gradients
 				optimizer.zero_grad()
@@ -147,44 +147,44 @@ class Execution:
 if __name__ == '__main__':
 	
 	args = parameter_parser()
-	
+
 	# If you already have the trained weights
 	if args.load_model == True:
 		if os.path.exists(args.model):
-			
+
 			# Load and prepare sequences
 			execution = Execution(args)
 			execution.prepare_data()
-			
+
 			sequences = execution.sequences
 			idx_to_char = execution.idx_to_char
 			vocab_size = execution.vocab_size
-			
+
 			# Initialize the model
 			model = TextGenerator(args, vocab_size).to('cuda')
 			# Load weights
 			model.load_state_dict(torch.load(args.model, map_location='cuda'))
-			
+
 			# Text generator
 			execution.generator(model, sequences, idx_to_char, 10000)
-	
-	# If you will train the model 		
+
+	# If you will train the model
 	else:
 		# Load and preprare the sequences
 		execution = Execution(args)
 		execution.prepare_data()
-		
+
 		# Training the model
 		execution.train(args)
 
 		sequences = execution.sequences
 		idx_to_char = execution.idx_to_char
 		vocab_size = execution.vocab_size
-		
+
 		# Initialize the model
 		model = TextGenerator(args, vocab_size).to('cuda')
-		# Load weights
+
 		model.load_state_dict(torch.load('weights/textGenerator_model-0.pt', map_location='cuda'))
-		
+
 		# Text generator
 		execution.generator(model, sequences, idx_to_char, 10000)

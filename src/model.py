@@ -1,4 +1,4 @@
-import numpy as np
+# import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,88 +13,30 @@ class TextGenerator(nn.ModuleList):
         self.num_classes = vocab_size
         self.sequence_len = args.window
 
-        # Dropout
-        self.dropout = nn.Dropout(0.25)
-
         # Embedding layer
         self.embedding = nn.Embedding(self.input_size, self.hidden_dim)
         self.lstm = nn.LSTM(self.hidden_dim, self.hidden_dim, num_layers=3,
-                            batch_first=True,dropout=0, bidirectional=True)
-        self.fc1 = nn.Linear(self.hidden_dim,2048)
+                            batch_first=False,dropout=0.25, bidirectional=True)
+        self.fc1 = nn.Linear(2*self.hidden_dim,2048)
         self.fc2 = nn.Linear(2048,4096)
         self.fc3 = nn.Linear(4096,self.num_classes)
-        # # Bi-LSTM
-        # # Forward and backward
-        # self.lstm_cell_forward = nn.LSTMCell(self.hidden_dim, self.hidden_dim)
-        # self.lstm_cell_backward = nn.LSTMCell(self.hidden_dim, self.hidden_dim)
 
-        # # LSTM layer
-        # self.lstm_cell = nn.LSTMCell(self.hidden_dim * 2, self.hidden_dim * 2)
-
-        # # Linear layer
-        # self.linear = nn.Linear(self.hidden_dim * 2, self.num_classes)
 
     def forward(self, x, hidden=None):
 
-        # Bi-LSTM
-        # hs = [batch_size x hidden_size]
-        # cs = [batch_size x hidden_size]
-        # hs_forward = torch.zeros(x.size(0), self.hidden_dim).to('cuda')
-        # cs_forward = torch.zeros(x.size(0), self.hidden_dim).to('cuda')
-        # hs_backward = torch.zeros(x.size(0), self.hidden_dim).to('cuda')
-        # cs_backward = torch.zeros(x.size(0), self.hidden_dim).to('cuda')
 
-        # # LSTM
-        # # hs = [batch_size x (hidden_size * 2)]
-        # # cs = [batch_size x (hidden_size * 2)]
-        # hs_lstm = torch.zeros(x.size(0), self.hidden_dim * 2).to('cuda')
-        # cs_lstm = torch.zeros(x.size(0), self.hidden_dim * 2).to('cuda')
-
-        # # Weights initialization
-        # torch.nn.init.kaiming_normal_(hs_forward)
-        # torch.nn.init.kaiming_normal_(cs_forward)
-        # torch.nn.init.kaiming_normal_(hs_backward)
-        # torch.nn.init.kaiming_normal_(cs_backward)
-        # torch.nn.init.kaiming_normal_(hs_lstm)
-        # torch.nn.init.kaiming_normal_(cs_lstm)
-
-        # # From idx to embedding
         out = self.embedding(x)
+        out = out.view(self.sequence_len, x.size(0), -1)
         if hidden is None:
-            h_0 = input.data.new(3, self.batch_size, self.hidden_dim).fill_(0).float().to('cuda')
-            c_0 = input.data.new(3, self.batch_size, self.hidden_dim).fill_(0).float().to('cuda')
+            h_0 = x.data.new(2*3, self.batch_size, self.hidden_dim).fill_(0).float().to('cuda')
+            c_0 = x.data.new(2*3, self.batch_size, self.hidden_dim).fill_(0).float().to('cuda')
         else:
             h_0, c_0 = hidden
+        # print(out.shape)
         output, hidden = self.lstm(out, (h_0, c_0))#hidden 是h,和c 这两个隐状态
-        output = torch.tanh(self.fc1(output))
-        output = torch.tanh(self.fc2(output))
+        # output=output.view(self.sequence_len * self.batch_size, -1)
+        output = torch.relu(self.fc1(output))
+        output = torch.relu(self.fc2(output))
         output = self.fc3(output)
-        output = output.reshape(self.batch_size* self.sequence_len, -1)
-        # # Prepare the shape for LSTM Cells
-        # out = out.view(self.sequence_len, x.size(0), -1)
-
-        # forward = []
-        # backward = []
-
-        # # Unfolding Bi-LSTM
-        # # Forward
-        # for i in range(self.sequence_len):
-        #  	hs_forward, cs_forward = self.lstm_cell_forward(out[i], (hs_forward, cs_forward))
-        #  	forward.append(hs_forward)
-
-        # # Backward
-        # for i in reversed(range(self.sequence_len)):
-        #  	hs_backward, cs_backward = self.lstm_cell_backward(out[i], (hs_backward, cs_backward))
-        #  	backward.append(hs_backward)
-
-        # # LSTM
-        # for fwd, bwd in zip(forward, backward):
-        # 	input_tensor = torch.cat((fwd, bwd), 1)
-        # 	hs_lstm, cs_lstm = self.lstm_cell(input_tensor, (hs_lstm, cs_lstm))
-        # output = torch.tanh(self.fc1(output))
-        # output = torch.tanh(self.fc2(output))
-        # output = self.fc3(output)
-        # # Last hidden state is passed through a linear layer
-        # out = self.linear(hs_lstm)
-
+        # output = output.reshape(self.batch_size* self.sequence_len, -1)
         return output,hidden
