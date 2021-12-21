@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from src import TextGenerator
 from utils import Preprocessing
 from utils import parameter_parser
-
+os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 class Execution:
 
 	def __init__(self, args):
@@ -63,7 +63,7 @@ class Execution:
 		for epoch in range(self.num_epochs):
 			# Mini batches
 			for i in range(num_batches):
-			
+				optimizer.zero_grad()
 				# Batch definition
 				try:
 					x_batch = self.sequences[i * self.batch_size : (i + 1) * self.batch_size]
@@ -71,17 +71,20 @@ class Execution:
 				except:
 					x_batch = self.sequences[i * self.batch_size :]
 					y_batch = self.targets[i * self.batch_size :]
-			
+
 				# Convert numpy array into torch tensors
 				x = torch.from_numpy(x_batch).type(torch.LongTensor).to('cuda')
 				y = torch.from_numpy(y_batch).type(torch.LongTensor).to('cuda')
-				# Feed the model
+
 				y_pred,hidden = model(x)
-				print(y_pred.shape)
-				print(y.squeeze().shape)
-				loss = F.cross_entropy(y_pred, y.squeeze())
+				# print(y_pred.shape)
+				# y_pred=y_pred.permute(1,0,2)
+				# y_pred=y_pred.view(self.batch_size*self.window,-1)
+				y=y.squeeze().view(-1)
+
+				loss = F.cross_entropy(y_pred,y )
 				# Clean gradients
-				optimizer.zero_grad()
+
 				# Calculate gradientes
 				loss.backward()
 				# Updated parameters
@@ -96,9 +99,9 @@ class Execution:
 		
 		# Set the model in evalulation mode
 		model.eval()
-		hidden = torch.zeros((2, 3 * 1, 1, args.hidden_dim), dtype=torch.float).to('cuda')
+		hidden=None
 		# Define the softmax function
-		# softmax = nn.Softmax(dim=1)
+		softmax = nn.Softmax(dim=1)
 		
 		# Randomly is selected the index from the set of sequences
 		start = np.random.randint(0, len(sequences)-1)
@@ -124,7 +127,7 @@ class Execution:
 			# Make a prediction given the pattern
 			prediction ,hidden= model(pattern,hidden=hidden)
 			# It is applied the softmax function to the predicted tensor
-			# prediction = softmax(prediction)
+			prediction = softmax(prediction)
 			
 			# The prediction tensor is transformed into a numpy array
 			prediction = prediction.squeeze().detach().cpu().numpy()

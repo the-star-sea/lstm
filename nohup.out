@@ -1,0 +1,15 @@
+Vocab:  51311
+Traceback (most recent call last):
+  File "main.py", line 181, in <module>
+    execution.train(args)
+  File "main.py", line 89, in train
+    loss.backward()
+  File "/home/yunzb/.conda/envs/stylegan/lib/python3.7/site-packages/torch/_tensor.py", line 307, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/home/yunzb/.conda/envs/stylegan/lib/python3.7/site-packages/torch/autograd/__init__.py", line 156, in backward
+    allow_unreachable=True, accumulate_grad=True)  # allow_unreachable flag
+KeyboardInterrupt
+Building prefix dict from the default dictionary ...
+Loading model from cache /tmp/jieba.cache
+Loading model cost 0.718 seconds.
+Prefix dict has been built successfully.
