@@ -1,0 +1,42 @@
+nohup: 忽略输入
+Vocab:  4263
+main.py:98: UserWarning: torch.nn.utils.clip_grad_norm is now deprecated in favor of torch.nn.utils.clip_grad_norm_.
+  nn.utils.clip_grad_norm(model.parameters(), clip)
+Epoch: 0,  loss: 6.55062 
+Epoch: 1,  loss: 6.16100 
+Epoch: 2,  loss: 6.28388 
+Epoch: 3,  loss: 10.42714 
+Epoch: 4,  loss: 6.17179 
+Epoch: 5,  loss: 6.24053 
+Epoch: 6,  loss: 6.47077 
+Epoch: 7,  loss: 6.24994 
+Epoch: 8,  loss: 6.20118 
+Epoch: 9,  loss: 6.31678 
+Epoch: 10,  loss: 6.23815 
+Epoch: 11,  loss: 6.16510 
+Epoch: 12,  loss: 6.27225 
+Epoch: 13,  loss: 6.30762 
+Epoch: 14,  loss: 6.28647 
+Epoch: 15,  loss: 6.29976 
+Epoch: 16,  loss: 6.21357 
+Epoch: 17,  loss: 6.33165 
+Epoch: 18,  loss: 8.83346 
+Epoch: 19,  loss: 6.24118 
+Epoch: 20,  loss: 6.18117 
+Epoch: 21,  loss: 6.32609 
+Epoch: 22,  loss: 6.16313 
+Epoch: 23,  loss: 6.24054 
+Epoch: 24,  loss: 6.95872 
+Epoch: 25,  loss: 6.21408 
+Epoch: 26,  loss: 6.20261 
+Epoch: 27,  loss: 6.21812 
+Epoch: 28,  loss: 6.37425 
+Epoch: 29,  loss: 6.16481 
+Epoch: 30,  loss: 6.20369 
+Epoch: 31,  loss: 7.26958 
+Epoch: 32,  loss: 6.39234 
+Epoch: 33,  loss: 6.20146 
+Epoch: 34,  loss: 6.17246 
+Epoch: 35,  loss: 6.20141 
+Epoch: 36,  loss: 6.22776 
+Epoch: 37,  loss: 6.27059 

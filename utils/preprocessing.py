@@ -1,6 +1,9 @@
 import numpy as np
 import re
-import jieba
+
+import torch
+from torch.utils.data import DataLoader,Dataset
+
 
 
 def is_uchar(uchar):
@@ -15,11 +18,12 @@ def is_uchar(uchar):
     return False
 
 
-class Preprocessing:
+
+class Preprocessing(Dataset):
     @staticmethod
     def read_dataset(file):
         # Open raw file
-        with open(file, 'r', encoding='gbk') as f:
+        with open(file, 'r', encoding='utf-8') as f:
             data = f.readlines()
 
         pattern = re.compile(r'\(.*\)')
@@ -29,9 +33,9 @@ class Preprocessing:
         data = ''.join(data)
         data = [char for char in data if is_uchar(char)]
         data = ''.join(data)
-        data = re.sub("[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）]+", "", data)
-        data = jieba.cut(data)
-        data = [i for i in data if i[0] != '第' and i[-1] != '章']
+        # data = re.sub("[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）]+", "", data)
+        # data = jieba.cut(data)
+        # data = [i for i in data if i[0] != '第' and i[-1] != '章']
         return data
 
     @staticmethod

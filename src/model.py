@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 class TextGenerator(nn.ModuleList):
-    def __init__(self, args, vocab_size):
+    def __init__(self, args, vocab_size,predict=False):
         super(TextGenerator, self).__init__()
 
         self.batch_size = args.batch_size
@@ -17,7 +17,11 @@ class TextGenerator(nn.ModuleList):
         self.embed_size = args.embed_size
         # Embedding layer
         self.embedding = nn.Embedding(self.input_size, self.embed_size)
-        self.lstm = nn.LSTM(self.embed_size, self.hidden_size, num_layers=self.layer_size,
+        if predict:
+            self.lstm = nn.LSTM(self.embed_size, self.hidden_size, num_layers=self.layer_size,
+                                batch_first=False, dropout=0, bidirectional=True)
+        else:
+            self.lstm = nn.LSTM(self.embed_size, self.hidden_size, num_layers=self.layer_size,
                             batch_first=False,dropout=0.25, bidirectional=True)
         self.layer_size =self.layer_size*2
 
@@ -30,18 +34,24 @@ class TextGenerator(nn.ModuleList):
 
 
 
-    def forward(self, x, hidden=None):
+    def forward(self, x, hidden=None,predict=False):
 
 
         out = self.embedding(x)
         out = out.view(self.sequence_len, x.size(0), -1)
+
         if hidden is None:
-            h_0 = x.data.new(self.layer_size, self.batch_size, self.hidden_size).fill_(0).float().to('cuda')
-            c_0 = x.data.new(self.layer_size, self.batch_size, self.hidden_size).fill_(0).float().to('cuda')
+            if predict:
+                h_0 = x.data.new(self.layer_size, 1, self.hidden_size).fill_(0).float().to('cuda')
+                c_0 = x.data.new(self.layer_size, 1, self.hidden_size).fill_(0).float().to('cuda')
+            else:
+                h_0 = x.data.new(self.layer_size, self.batch_size, self.hidden_size).fill_(0).float().to('cuda')
+                c_0 = x.data.new(self.layer_size, self.batch_size, self.hidden_size).fill_(0).float().to('cuda')
         else:
             h_0, c_0 = hidden
 
         out, (h_n, c_n) = self.lstm(out, (h_0, c_0))#hidden 是h,和c 这两个隐状态
+        hidden=(h_n, c_n)
         (forward_out, backward_out) = torch.chunk(out, 2, dim=2)
         out = forward_out + backward_out  # [seq_len, batch, hidden_size]
         out = out.permute(1, 0, 2)  # [batch, seq_len, hidden_size]
@@ -60,4 +70,4 @@ class TextGenerator(nn.ModuleList):
         x = torch.bmm(softmax_w, out)  # [batch, 1, hidden_size]
         x = x.squeeze(dim=1)
         out = self.fc(x)
-        return out,(h_n, c_n)
+        return out,hidden

@@ -1,9 +1,7 @@
 # Text Generation with Bi-LSTMs in PyTorch
 
-This repository presents a model for text generation using Bi-LSTM and LSTM recurrent neural networks. The model is implemented using PyTorch's LSTMCells. 
+This repository presents a model for text generation using Bi-LSTM and attention neural networks. 
 
-If you want to delve into the details regarding how the text was pre-processed, how the sequences were generated, how the Bi-LSTM & LSTM were built from the LSTMCells and how the model was trained, I highly recommend reading the blog:
-<a href="https://medium.com/@fer.neutron/text-generation-with-bi-lstm-in-pytorch-5fda6e7cc22c?source=friends_link&sk=5c18f546434e6697c1a33ffa7bd3d22b">Text Generation with Bi-LSTM in PyTorch</a>
 
 ## 1. Files
 - The ``data`` directory contains the text which we will work with. 
@@ -12,10 +10,8 @@ If you want to delve into the details regarding how the text was pre-processed, 
 - The ``weights`` directory contains the trained weights.
 
 ## 2. The model
-The architecture of the proposed neural network consists of an embedding layer followed by a Bi-LSTM as well as a LSTM layer. Right after, the latter LSTM is connected to a linear layer. The following image describes the model architecure. 
-<p align="center">
-<img src='img/bilstm_maths.jpg'>
-</p>
+The architecture of the proposed neural network consists of an embedding layer followed by a Bi-LSTM as well as attention layer. Right after, the latter LSTM is connected to a linear layer. The following image describes the model architecure. 
+
 
 
 ## 3. Demo
